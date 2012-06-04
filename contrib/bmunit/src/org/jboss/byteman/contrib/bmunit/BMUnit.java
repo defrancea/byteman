@@ -68,6 +68,47 @@ public class BMUnit
     private static HashMap<String, String> fileTable = new HashMap<String, String>();
 
     /**
+     * Host to connect the agent. This value will be set at agent loading
+     */
+    private static String host;
+
+    /**
+     * Port to connect the agent. This value will be set at agent loading
+     */
+    private static Integer port;
+
+    /**
+     * Gets host from system properties
+     * @return host
+     */
+    private static String getHost()
+    {
+        if (host == null) {
+            return host = System.getProperty(AGENT_HOST);
+        }
+        else
+        {
+            return host;
+        }
+    }
+
+    /**
+     * Gets port from system properties
+     * @return port
+     */
+    private static int getPort()
+    {
+        if (port == null) {
+            String portString = System.getProperty(AGENT_PORT);
+            return port = (portString == null ? 0 : Integer.valueOf(portString));
+        }
+        else
+        {
+            return port;
+        }
+    }
+
+    /**
      * computes the default load directory from system property org.jboss.byteman.contrib.bmunit.load.directory
      * or defaults  it to "."
      * @return the load directory
@@ -89,9 +130,6 @@ public class BMUnit
     private static synchronized void loadAgent() throws Exception
     {
         String[] properties = new String[0];
-        String host = System.getProperty(AGENT_HOST);
-        String portString = System.getProperty(AGENT_PORT);
-        int port = (portString == null ? 0 : Integer.valueOf(portString));
         String id = null;
 
         // if we can get a proper pid on Linux  we use it
@@ -145,7 +183,7 @@ public class BMUnit
             if (verbose) {
                 System.out.println("BMUNit : loading agent id = " + id);
             }
-            Install.install(id, true, host, port, properties);
+            Install.install(id, true, getHost(), getPort(), properties);
         } catch (AgentInitializationException e) {
             // this probably indicates that the agent is already installed
         }
@@ -254,7 +292,7 @@ public class BMUnit
         if (!file.canRead()) {
             throw new IOException("Cannot read Byteman rule file " + filename);
         }
-        Submit submit = new Submit();
+        Submit submit = new Submit(getHost(), getPort());
         List<String> files =  new ArrayList<String>();
         files.add(filename);
         if (verbose) {
@@ -282,7 +320,7 @@ public class BMUnit
         if (filename == null) {
             throw new FileNotFoundException("Rule file not found for Byteman test case " + key);
         }
-        Submit submit = new Submit();
+        Submit submit = new Submit(getHost(), getPort());
         List<String> files =  new ArrayList<String>();
         files.add(filename);
         if (verbose) {
@@ -305,7 +343,7 @@ public class BMUnit
         }
         String key = className + "+"  + testname;
         fileTable.put(key, scriptText);
-        Submit submit = new Submit();
+        Submit submit = new Submit(getHost(), getPort());
         if (verbose) {
             System.out.println("BMUNit : loading text script = " + key);
             // System.out.println(scriptText);
@@ -333,7 +371,7 @@ public class BMUnit
         if (scriptText == null) {
             throw new Exception("Rule script not found " + key);
         }
-        Submit submit = new Submit();
+        Submit submit = new Submit(getHost(), getPort());
         if (verbose) {
             System.out.println("BMUNit : unloading text script = " + key);
         }
